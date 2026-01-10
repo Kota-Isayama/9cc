@@ -54,7 +54,7 @@ void expect(char *op) {
 
 // 次のトークンが数値の場合、トークンを一つ読み進めてその数値を返す。
 // それ以外の場合にはエラーを報告する。
-int b() {
+int expect_number() {
     if (token->kind != TK_NUM)
         error("数ではありません。");
     int val = token->val;
@@ -255,7 +255,7 @@ Node *primary() {
     }
 
     // そうでなければ数値のはず
-    return new_node_num(b());
+    return new_node_num(expect_number());
 }
 
 void gen(Node *node) {
