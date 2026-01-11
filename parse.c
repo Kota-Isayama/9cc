@@ -35,17 +35,19 @@ bool consume(char *op) {
 }
 
 Token *consume_ident() {
-    if (token->kind != TK_IDENT) {
-        return NULL;
-    }
-    return token;
+    if (token->kind != TK_IDENT) 
+        return false;
+
+    Token *cur_token = token;
+    token = token->next;
+    return cur_token;
 }
 
 // 次のトークンが期待している記号の時には、トークンを一つ読み進める。
 // それ以外の場合にはエラーを報告する。
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
-        error("'%c'ではありません。", op);
+        error("'%s'ではありません。(実際は'%s')", op, token->str);
     token = token->next;
 }
 
@@ -57,6 +59,10 @@ int expect_number() {
     int val = token->val;
     token = token->next;
     return val;
+}
+
+bool at_ident() {
+    return token->kind == TK_IDENT;
 }
 
 bool at_eof() {
@@ -146,7 +152,7 @@ Node *stmt() {
 }
 
 Node *expr() {
-    Node *node = equality();
+    return assign();
 }
 
 Node *assign() {
@@ -154,8 +160,9 @@ Node *assign() {
     
     if (consume("=")) {
         node = new_node(ND_ASSIGN, node, assign());
-        return node;
     }
+    
+    return node;
 }
 
 Node *equality() {
@@ -243,8 +250,8 @@ Node *primary() {
     }
 
     // 識別子の場合
-    Token *token = consume_ident();
-    if (token) {
+    if (at_ident()) {
+        Token *token = consume_ident();
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
         node->offset = (token->str[0] - 'a' + 1) * 8;
