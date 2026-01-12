@@ -37,6 +37,14 @@ bool consume(char *op) {
     return true;
 }
 
+bool consume_return() {
+    if (token->kind != TK_RETURN)
+        return false;
+    
+    token = token->next;
+    return true;
+}
+
 Token *consume_ident() {
     if (token->kind != TK_IDENT) 
         return false;
@@ -125,6 +133,12 @@ Token *tokenize(char *p) {
             continue;
         }
 
+        if (strncmp(p, "return", 6) == 0 && !is_ident_char(p[6])) {
+            cur = new_token(TK_RETURN, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || *p == '_') {
             char *q = p;
             while (*p && is_ident_char(*p)) {
@@ -157,8 +171,21 @@ Node *new_node_num(int val) {
 }
 
 Node *stmt() {
-    Node *node = expr();
-    expect(";");
+    Node *node;
+    if (consume_return()) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_RETURN;
+
+        node->lhs = expr();
+    }
+    else {
+        node = expr();
+    }
+    
+    if (!consume(";")) {
+        error("';'ではないトークンです。");
+    }
+    
     return node;
 }
 

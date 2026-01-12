@@ -3,6 +3,7 @@ typedef enum {
     TK_IDENT,       // 識別子
     TK_NUM,         // 整数トークン
     TK_EOF,         // 入力の終わりを表すトークン
+    TK_RETURN,      // リターン文
 } TokenKind;
 
 typedef struct Token {
@@ -39,6 +40,7 @@ typedef enum {
     ND_LT,  // <
     ND_LE,  // <=
     ND_NUM, // 整数
+    ND_RETURN,  // リターン
 } NodeKind;
 
 typedef struct Node {
