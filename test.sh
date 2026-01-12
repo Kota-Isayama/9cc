@@ -40,5 +40,6 @@ assert 1 "0==0==1;"
 assert 0 "0==1==1;"
 assert 1 "x=1;"
 assert 10 "x=1;y=9;x+y;"
+assert 10 "xy=1;zw=9;xy+zw;"
 
 echo OK
