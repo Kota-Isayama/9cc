@@ -14,6 +14,9 @@ Token *token;
 // statementの列
 Node *code[100];
 
+// ローカル変数
+LVar *locals = NULL;
+
 // エラーを報告するための関数
 // printfと同じ引数を取る
 void error(char *fmt, ...) {
@@ -83,6 +86,10 @@ bool startwith(char *p, char *q) {
     return memcmp(p, q, strlen(q)) == 0;
 }
 
+bool is_ident_char(char q) {
+    return ('a' <= q && q <= 'z') || ('A' <= q && q <= 'Z') || ('0' <= q && q <= '9') || q == '_';
+}
+
 // 入力文字列pをトークナイズしてそれを返す。
 Token *tokenize(char *p) {
     Token head;
@@ -118,8 +125,12 @@ Token *tokenize(char *p) {
             continue;
         }
 
-        if ('a' <= *p && *p <= 'z') {
-            cur = new_token(TK_IDENT, cur, p++, 1);
+        if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || *p == '_') {
+            char *q = p;
+            while (*p && is_ident_char(*p)) {
+                p++;
+            }
+            cur = new_token(TK_IDENT, cur, q, p - q);
             continue;
         }
 
@@ -253,8 +264,25 @@ Node *primary() {
     if (at_ident()) {
         Token *token = consume_ident();
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-        node->offset = (token->str[0] - 'a' + 1) * 8;
+        node->kind = TK_IDENT;
+
+        LVar *lvar = find_lvar(token);
+        if (lvar) {
+            node->offset = lvar->offset;    
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = token->str;
+            lvar->len = token->len;
+            if (locals) {
+                lvar->offset = locals->offset + 8;
+            }
+            else {
+                lvar->offset = 8;
+            }
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 
@@ -268,4 +296,13 @@ void program() {
         code[i++] = stmt();
     }
     code[i] = NULL;
+}
+
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var; var = var->next) {
+        if (var->len == tok->len && !memcmp(var->name, tok->str, var->len)) {
+            return var;
+        }
+    }
+    return NULL;
 }

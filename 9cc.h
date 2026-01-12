@@ -51,6 +51,15 @@ typedef struct Node {
 
 extern Node *code[];
 
+typedef struct LVar LVar;
+struct LVar {
+    LVar *next; // 次の変数かNULL
+    char *name; // 変数の名前
+    int len;    // 名前の長さ
+    int offset; // RBPからのオフセット
+};
+extern LVar *locals;
+
 Node *new_node(NodeKind, Node*, Node*);
 Node *new_node_num(int);
 
@@ -67,3 +76,5 @@ Node *primary();
 void program();
 
 void gen(Node*);
+
+LVar *find_lvar(Token *tok);
